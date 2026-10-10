@@ -1,5 +1,5 @@
-# 🚨 VULNERABILITY: Using an outdated base image with known CVEs (catches container-trivy)
-FROM node:14.15.0-alpine
+# ✅ FIXED: Using a modern, supported base image
+FROM node:20-alpine
 
 WORKDIR /app
 
