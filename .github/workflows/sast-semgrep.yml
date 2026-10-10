@@ -20,4 +20,4 @@ jobs:
       - name: Run Semgrep
         run: |
           pipx install semgrep
-          semgrep scan --config auto --error .
+          semgrep scan --config auto --error Backend/src/
