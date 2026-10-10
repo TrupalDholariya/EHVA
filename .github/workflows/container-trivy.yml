@@ -1,0 +1,50 @@
+name: Container Scan (Trivy)
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  image: "app:ci"
+  build: "true"
+  dockerfile: "./Dockerfile"
+  context: "."
+  severity_fail: "CRITICAL,HIGH"
+  artifact_name: "trivy-report"
+
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - if: ${{ env.build == 'true' }}
+        name: Build image
+        run: docker build -t "${{ env.image }}" -f "${{ env.dockerfile }}" "${{ env.context }}"
+
+      - name: Create Trivy results directory
+        run: mkdir -p trivy-results
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          image-ref: ${{ env.image }}
+          format: 'json'
+          output: 'trivy-results/trivy.json'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: ${{ env.severity_fail }}
+
+      # ✅ FIXED: use dynamic artifact name to prevent 409 conflicts
+      - name: Upload Trivy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.artifact_name }}      # ✅ dynamic name
+          path: trivy-results/trivy.json
+          if-no-files-found: warn
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
+

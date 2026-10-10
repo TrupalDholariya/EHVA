@@ -1,0 +1,84 @@
+name: DAST (ZAP Baseline)
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  target: "http://localhost:8000"
+  max_time: "5"
+  artifact_name: "zap-report"
+  build_image: "false"
+  dockerfile: "./Dockerfile"
+  context: "."
+  app_port: "8000"
+
+jobs:
+  zap:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create results files
+        run: |
+          touch report_html.html report_json.json report_md.md || true
+          chmod a+w report_html.html report_json.json report_md.md || true
+
+      - name: Create docker network
+        run: docker network create zapnet || true
+
+      - name: Build app image (optional)
+        if: ${{ env.build_image == 'true' }}
+        run: |
+          docker build -t app:ci -f "${{ env.dockerfile }}" "${{ env.context }}"
+
+      - name: Run app container (optional)
+        if: ${{ env.build_image == 'true' }}
+        run: |
+          docker run -d --rm --name app --network zapnet -p ${{ env.app_port }}:${{ env.app_port }} app:ci
+
+      - name: Wait for app (only if target is localhost or app)
+        if: startsWith(env.target, 'http://localhost') || startsWith(env.target, 'http://app') || startsWith(env.target, 'http://127.0.0.1') || startsWith(env.target, 'http://host.docker.internal') || startsWith(env.target, 'http://0.0.0.0')
+        run: |
+          TARGET="${{ env.target }}"
+          echo "Waiting for ${TARGET} to be ready..."
+          for i in {1..30}; do
+            if curl -fsS "${TARGET}" >/dev/null 2>&1; then
+              echo "Target is up."; exit 0
+            fi
+            echo "Waiting for ${TARGET}... ($i)"; sleep 2
+          done
+          echo "Target did not start in time."; docker logs app || true; exit 1
+
+      - name: Run ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: ${{ env.target }}
+          fail_action: true
+          cmd_options: "-m ${{ env.max_time }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Stop app (if started)
+        if: always() && env.build_image == 'true'
+        run: docker stop app || true
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.artifact_name }}-${{ github.run_id }}
+          path: |
+            report_html.html
+            report_json.json
+            report_md.md
+          if-no-files-found: ignore
+
+      - name: Remove docker network
+        if: always()
+        run: docker network rm zapnet || true
+

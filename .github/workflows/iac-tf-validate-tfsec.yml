@@ -1,0 +1,54 @@
+name: IaC Validate & tfsec
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  working_dir: "infra"
+  tf_version: "1.8.5"
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.tf_version }}
+
+      # Quickly check if the directory exists AND has any .tf files
+      - name: Check Terraform dir
+        id: check_dir
+        shell: bash
+        run: |
+          dir="${{ env.working_dir }}"
+          if [ -d "$dir" ] && compgen -G "$dir/**/*.tf" > /dev/null || compgen -G "$dir/*.tf" > /dev/null; then
+            echo "has_tf=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_tf=false" >> "$GITHUB_OUTPUT"
+            echo "No Terraform files found in '$dir'. Skipping."
+          fi
+
+      - name: Terraform fmt/validate/plan
+        if: ${{ steps.check_dir.outputs.has_tf == 'true' }}
+        run: |
+          terraform -chdir="${{ env.working_dir }}" init -input=false
+          terraform -chdir="${{ env.working_dir }}" fmt -check
+          terraform -chdir="${{ env.working_dir }}" validate
+          terraform -chdir="${{ env.working_dir }}" plan -out=tfplan
+
+      - name: tfsec
+        if: ${{ steps.check_dir.outputs.has_tf == 'true' }}
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: ${{ env.working_dir }}
+
+      - name: Upload plan
+        if: ${{ steps.check_dir.outputs.has_tf == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-plan
+          path: ${{ env.working_dir }}/tfplan
+

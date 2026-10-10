@@ -1,0 +1,25 @@
+name: SBOM (Syft)
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  target: "."
+  output: "sbom.spdx.json"
+
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anchore/sbom-action@v0
+        with:
+          path: ${{ env.target }}
+          format: spdx-json
+          output-file: ${{ env.output }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: ${{ env.output }}

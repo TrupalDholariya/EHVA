@@ -1,0 +1,25 @@
+name: SAST (Semgrep)
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  config: "auto"
+  fail_on: "high,critical"
+
+jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # required for SARIF/code scanning upload
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: ${{ env.config }}
+          fail_on: ${{ env.fail_on }}
+          publish_results: true
