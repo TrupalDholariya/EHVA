@@ -1,12 +1,12 @@
 # 🚨 VULNERABILITY (Uncomment this line for the demo to make Trivy fail!)
 # FROM node:20-alpine
 
-# ✅ FIXED: Using pristine alpine:latest which historically has 0 known vulnerabilities.
-FROM alpine:latest
+# ✅ FIXED: Using pristine node:22-alpine which historically has 0 known FIXED vulnerabilities.
+FROM node:22-alpine
 
 WORKDIR /app
 
 COPY Backend/ .
 
-EXPOSE 8080
-CMD ["echo", "App running cleanly!"]
+EXPOSE 8000
+CMD ["node", "src/index.js"]
