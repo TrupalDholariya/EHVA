@@ -1,0 +1,24 @@
+const AWS = require('aws-sdk');
+
+// 🚨 VULNERABILITY 1: Hardcoded AWS Credentials (catches secret-detect)
+const AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE";
+const AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
+
+function executeUserCommand(req, res) {
+    const userInput = req.query.input;
+
+    // 🚨 VULNERABILITY 2: Code Injection via eval() (catches sast-semgrep)
+    eval(userInput);
+
+    // 🚨 VULNERABILITY 3: Command Injection via child_process (catches sast-semgrep)
+    const { exec } = require('child_process');
+    exec("ping -c 4 " + userInput, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`exec error: ${error}`);
+            return;
+        }
+        res.send(stdout);
+    });
+}
+
+module.exports = { executeUserCommand };

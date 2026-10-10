@@ -165,37 +165,11 @@ jobs:
           REVERT_BRANCH: ${{ env.REVERT_BRANCH }}
           MODE: ${{ env.MODE }}
 
-  notify:
-    name: 📧 Email Committer
-    needs: [resolve_recipient, make_revert]
-    uses: ./.github/workflows/email_service.yml
-    with:
-      to: ${{ needs.resolve_recipient.outputs.to }}
-      cc: ${{ inputs.email_cc }}
-      sender_name: ${{ inputs.sender_name }}
-      subject: >-
-        ♻️ [${{ github.repository }}] Auto Revert (${{
-              needs.make_revert.outputs.revert_mode == 'push' ? 'Pushed' : 'PR Opened'
-            }}) for failed workflow: ${{ github.event.workflow_run.name }}
-      body: |
-        <h2>♻️ Auto Revert Triggered</h2>
-        <p><strong>Repository:</strong> <a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a></p>
-        <p><strong>Failed Workflow:</strong> ${{ github.event.workflow_run.name }}</p>
-        <p><strong>Branch:</strong> ${{ github.event.workflow_run.head_branch }}</p>
-        <p><strong>Commit:</strong> <a href="https://github.com/${{ github.repository }}/commit/${{ github.event.workflow_run.head_sha }}">${{ github.event.workflow_run.head_sha }}</a></p>
-        <p><strong>Revert Mode:</strong> ${{ needs.make_revert.outputs.revert_mode }}</p>
-        <p><strong>Revert Branch:</strong> ${{ needs.make_revert.outputs.revert_branch }}</p>
-        <p><a href="${{ github.event.workflow_run.html_url }}">🔗 View Failed Run</a></p>
-    secrets:
-      SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_PORT: ${{ secrets.SMTP_PORT }}
-      SMTP_USER: ${{ secrets.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS }}
 
   fail_check:
     name: ❌ Mark as Failed (to block)
     runs-on: ubuntu-latest
-    needs: [make_revert, notify]
+    needs: [make_revert]
     steps:
       - run: |
           echo "Revert performed (or PR opened) because a workflow failed. Marking this check as failed to block merge."
