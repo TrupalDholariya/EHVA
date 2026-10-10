@@ -1,8 +1,8 @@
 # 🚨 VULNERABILITY (Uncomment this line for the demo to make Trivy fail!)
-FROM node:20-alpine
+# FROM node:20-alpine
 
 # ✅ FIXED: Using pristine alpine:latest which historically has 0 known vulnerabilities.
-# FROM alpine:latest
+FROM alpine:latest
 
 WORKDIR /app
 
