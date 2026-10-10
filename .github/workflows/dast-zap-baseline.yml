@@ -8,7 +8,7 @@ env:
   target: "http://localhost:8000"
   max_time: "5"
   artifact_name: "zap-report"
-  build_image: "false"
+  build_image: "true"
   dockerfile: "./Dockerfile"
   context: "."
   app_port: "8000"
