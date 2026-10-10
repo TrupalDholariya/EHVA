@@ -1,8 +1,8 @@
 const AWS = require('aws-sdk');
 
 // 🚨 VULNERABILITY 1: Hardcoded AWS Credentials (catches secret-detect)
-// const AWS_ACCESS_KEY_ID = "";
-// const AWS_SECRET_ACCESS_KEY = "";
+// (Paste these fake tokens during the demo and uncomment them to trigger secret-detect!)
+
 
 function executeUserCommand(req, res) {
     const userInput = req.query.input;
