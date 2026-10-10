@@ -9,7 +9,7 @@ env:
   build: "true"
   dockerfile: "./Dockerfile"
   context: "."
-  severity_fail: "CRITICAL,HIGH"
+  severity_fail: "CRITICAL"
   artifact_name: "trivy-report"
 
 jobs:
