@@ -1,13 +1,9 @@
-# ✅ FIXED: Using a Debian-based slim image to avoid unpatched Alpine CVEs
-FROM node:22-slim
+# ✅ FIXED: Using a distroless image for true zero-vulnerabilities
+FROM gcr.io/distroless/nodejs22-debian12
 
 WORKDIR /app
-
-# Copying package.json (Assuming Backend structure)
-COPY Backend/package*.json ./
-RUN npm install
 
 COPY Backend/ .
 
 EXPOSE 8080
-CMD ["npm", "start"]
+CMD ["src/index.js"]
