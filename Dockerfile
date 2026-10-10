@@ -1,5 +1,5 @@
-# ✅ FIXED: Using a modern, supported base image
-FROM node:20-alpine
+# ✅ FIXED: Using a Debian-based slim image to avoid unpatched Alpine CVEs
+FROM node:22-slim
 
 WORKDIR /app
 
