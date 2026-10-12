@@ -36,12 +36,11 @@ jobs:
           vuln-type: 'os,library'
           severity: ${{ env.severity_fail }}
 
-      # ✅ FIXED: use dynamic artifact name to prevent 409 conflicts
       - name: Upload Trivy report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.artifact_name }}      # ✅ dynamic name
+          name: ${{ env.artifact_name }}      #  dynamic name
           path: trivy-results/trivy.json
           if-no-files-found: warn
           compression-level: 6
